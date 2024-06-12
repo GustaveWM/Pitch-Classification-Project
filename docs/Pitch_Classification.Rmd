@@ -19,11 +19,13 @@ library(gmodels)
 library(knitr)
 library(hexbin)
 
+set.seed(321)
+
 ```
 
 ## Abstract
 
-Within this project, I want to be able to understand if, taking different statistics from pitches can allow me to predict the type of pitch that was thrown. The algorithm I will using to go about this process is the k-Nearest Neighbors (kNN) algorithm. The data I am using for this will be pitch data from Los Angeles Dodgers pitcher, Clayton Kershaw, ranging from the 2020 season to the 2023 season. Each row of the data is 1 pitch from 1 game.
+Within this project, I want to be able to understand if, taking different statistics from pitches can allow me to predict the type of pitch that was thrown. The algorithm I will utilize to go about this process is the k-nearest neighbors (kNN) algorithm. The data I am using for this will be pitch data from Los Angeles Dodgers pitcher, Clayton Kershaw, ranging from the 2020 season to the 2023 season. Each row of the data is 1 pitch from 1 game.
 
 ### Data variables
 
@@ -57,6 +59,8 @@ df <- data.frame(
 kable(df, col.names = c("Variable", "Description"))
 ```
 
+
+
 ## Research Question
 
 Based on all of this pitch data, using some of the data points can we correctly cluster pitches together using the velocity, spin rate, and acceleration of the pitch? If so, can we use this data to correctly predict what type of pitch was thrown without having it provided?
@@ -87,37 +91,8 @@ test_classes <- testing_df$pitch_type
 
 ```
 
-# 3. Analysis & Discussion
 
-```{r}
-
-# Plot the training data and the testing points by release speed and spin rate 
-# and acceleration in x versus z direction
-ggplot(training_df, aes(x = release_speed, y = spin_rate, color = pitch_type)) + 
-  geom_point() + 
-  theme_bw() + 
-geom_point(data = testing_df, aes(x = release_speed, y = spin_rate), 
-           color = "black", pch = 5, size = 1) + 
-  labs(title = "Spin Rate of Ball vs Speed", x = "Speed (mph)", 
-       y = "Spin Rate (rpm)")
-```
-
-From Looking at this first plot on the left there are a couple of things we can notice early on. The Curveball as a pitch has a lower release speed and a relatively high spin rate. We can also point out that the Change-Up has a medium release speed and a lower spin rate. The Slider and the Fastball are similar in terms of spin rate however, the slider has a lower speed than the fastball. There are some pitches in here that are a little more difficult to observe. However from this we can see that there are different clusters formed based on the each pitch type and its spin rate and speed meaning that we can use speed and spin rate to classify the pitch type.
-
-```{r}
-ggplot(training_df, aes(x = ax, y = az, color = pitch_type)) + 
-  geom_hex() + 
-  theme_bw() + 
-  labs(title = "Hexbin Plot: Acceleration of ball on X axis vs Z axis", 
-       x = "x-acceleration", 
-       y = "z-acceleration")
-```
-
-This Hexbin plot demonstrates that there is a good clustering from the two variables x-acceleration(ax) and z-acceleration (az). This not only can be determined because of the clusters shown, but also that the centers are more concentrated and have a high count of pitches at the specific points. These variables az and ax is the acceleration of the ball as it approaches the plate. The ax is acceleration in the x direction which can be seen as higher on the curve, change up, and slider as these all have spin changing the direction of approach. The fastball, has very minimal change in the x direction and minimal in the z direction as it has only backspin and has a higher speed relative to the other pitches. The curve ball and slider have a higher z acceleration as they both have spin acting on them pushing them further down.
-
-Thus using the classifiers speed, spin, x-acceleration, and z-acceleration can help to predict what pitches are thrown based on these values.
-
-This is a summary table showing the mean, max, min and standard deviation values of the data used to predict the pitch type.
+This is a summary table showing the mean, max, min, and standard deviation values of the data that will be used to predict the pitch type.
 
 ```{r include=FALSE}
 mean_release_speed <- mean(DataUsed$release_speed)
@@ -148,41 +123,133 @@ summary_stats <- data.frame(
   Std_Dev = c(sd_release_speed, sd_spin_rate, sd_az, sd_ax)
 )
 
-
 ```
 
-This table contributes to an understanding that a lot varies from pitch type. From the standard deviation of all the data we can see that there is a high deviation due to the differences in each pitches attributes.
+This table contributes to an understanding that a lot varies for each pitch type. From the standard deviation of all the data, we can see that there is a high deviation due to the differences in each pitches attribute.
 
 ```{r}
 # Use kable to create a table
-kable(summary_stats, col.names = c("Statistic", "Mean", "Max", "Min", "Std Dev"))
+kable(summary_stats, col.names = c("Statistic", "Mean", "Max", "M  in", "Std Dev"))
 ```
 
+## Analysis & Discussion
+
 ```{r}
-set.seed(1234)
+
+# Plot the training data and the testing points by release speed and spin rate 
+# and acceleration in x versus z direction
+ggplot(training_df, aes(x = release_speed, y = spin_rate, color = pitch_type)) + 
+  geom_point() + 
+  theme_bw() + 
+geom_point(data = testing_df, aes(x = release_speed, y = spin_rate), 
+           color = "black", pch = 5, size = 1) + 
+  labs(title = "Spin Rate of Ball vs Speed", x = "Speed (mph)", 
+       y = "Spin Rate (rpm)")
+```
+
+From Looking at this first plot on the left there are a couple of things we can notice early on. The Curveball as a pitch has a lower release speed and a relatively high spin rate. We can also point out that the Change-Up has a medium release speed and a lower spin rate. The Slider and the Fastball are similar in terms of spin rate however, the Slider has a lower speed than the Fourseam Fastball. Some pitches in the data set are a little more difficult to observe. However, from this, we can see that there are different clusters formed based on  each pitch type and its spin rate and speed meaning that we can use speed and spin rate to classify the pitch type.
+
+```{r}
+ggplot(training_df, aes(x = ax, y = az, color = pitch_type)) + 
+  geom_hex() + 
+  theme_bw() + 
+  labs(title = "Hexbin Plot: Acceleration of ball on X axis vs Z axis", 
+       x = "x-acceleration", 
+       y = "z-acceleration")
+```
+
+This Hexbin plot demonstrates that there is a good clustering from the two variables x-acceleration(ax) and z-acceleration (az). This not only can be determined because of the clusters shown, but also because the centers are more concentrated and have a high count of pitches at the specific points. These variables az and ax are the acceleration of the ball as it approaches the plate. The ax is acceleration in the x direction which can be seen as higher on the curve, change up, and slider as these all have spin changing the direction of approach. The fastball has a very minimal change in the x-direction and minimal in the z-direction as it only has backspin and has a higher speed relative to the other pitches. The curve ball and slider have a higher z acceleration as they both have spin acting on them pushing them further down.
+
+Thus using the classifiers speed, spin, x-acceleration, and z-acceleration can help to predict what pitches are thrown based on these values.
+
+## kNN Application
+
+Now a little bit of background on what kNN is and does. kNN, or k-nearest-neighbors, can be used for classification and regression. In this case I will be utilizing it for classification so that I can classify pitches.
+
+What the kNN algorithm does is, that given a singular data point, it compares the k closest training points, its neighbors chosen based on their distance typically using the Euclidean distance between the training and testing point. Using the closest training point(s) the test point will be classified based on the majority class of the training point(s).
+
+## Attempting to find the optimal k value
+
+Since in the plots above it is noticeable that there are clusters formed from each pitch type the k-value with the highest accuracy (most optimal) will not be super high, however I do want to test to see what this optimal k-value would be. So I will be running a simulation running from k=2 to k=40. How I will be calculating the accuracy is by taking the sum of the predicted classes that are equal to the true test classes. This value is then divided by the total amount of test classes that there are. This gives the accuracy of the run kNN algorithm.
+```{r include=FALSE  }
+
+accuracy_values <- c()
+
+for (i in 2:40) {
+  Pitch_predicted_classes <- knn(train = train_features, 
+                        test = test_features, cl = train_classes, k = i)
+  accuracy <- sum(Pitch_predicted_classes == test_classes) / length(test_classes)
+  accuracy_values <- c(accuracy_values, accuracy)
+}
+#data frame full of accuracy values and each value of k
+accuracy_df <- data.frame(k = 2:40, accuracy = accuracy_values)
+```
+
+Here I am now plotting the accuracy of each iteration of k, to see which value of k produces the highest accuracy.
+
+```{r}
+ggplot(data = accuracy_df, aes(x = k, y = accuracy)) +
+  geom_point() +
+  geom_line()
+
+#retaining the value of k with the highest accuracy from the data frame
+opt_k  <- accuracy_df[which.max(accuracy_df$accuracy), ]$k
+```
+
+From this plot we can see that the highest accuracy is towards the beginning as the accuracy steadily decreases as we use more k values. 
+
+## Applying the optimal k value
+
+Now using this optimal k that I have found I will finally be running the kNN algorithm to classify the pitches in the testing set.
+
+```{r include=FALSE}
+
 # Computing the knn algorithm to predict pitch type
 Pitch_knn_classes <- knn(train = train_features, 
-                        test = test_features, cl = train_classes, k = 6)
+                        test = test_features, cl = train_classes, k = opt_k)
+accuracy <- sum(Pitch_knn_classes == test_classes) / length(test_classes)
+```
+
+Below is the optimal k-value that was found and that is being used to run the kNN algorithm.
+
+```{r}
+print(paste("Optimal k-value =", opt_k))
+```
+
+This is the accuracy when running the algorithm with k equal to the value found above.
+
+```{r}
+print(paste0("Accuracy = ", round(accuracy, 4) * 100, "%"))
 
 # Showing the confusion matrix to see if the pitches were estimated correctly
 CrossTable(x = Pitch_knn_classes, y = test_classes, prop.chisq = FALSE, prop.t = F, prop.r = F)
 
 ```
 
-From this knn algorithm, we can see that these classifiers do infact estimate the pitch type well. The knn algorithm got approximately 66% of changeups (CH) correct, 99% of Curve balls (CU) correct, 98% of Fastballs (FF) correct, correctly obtains all the split finger fastballs (FS), and 99% of sliders (SL) correct. The only present issue is that for Sinkers (SI), there were not enough data points for these pitches to correctly cluster them.
+From this application of the kNN algorithm, we observe that these classifiers (spin rate, speed, x-acceleration, and z-acceleration) allow for an accurate estimate of the pitch type. 
+
+The Curveball (CU), Fourseam Fastball (FF), and Slider (SL) were 99% correctly classified. This means that 99% of unknown curveballs in the testing set are correctly classified as curveballs. The same goes for the Fourseam Fastballs and the Sliders. 
+
+The Changeup (CH) has a slightly lower accuracy of approximately 91% which is still very good, just some Changeups are miss-classified as Fourseam Fastballs. This can be due to the Changeup having a lower spin rate which is closest to the Fourseam Fastball as well as its acceleration in the z and x axis looks more like that of the Fourseam Fastball.
+
+Now, for the Split Finger Fastball (FS) and the Sinker (SI), there are very few of these pitches in the entire data set so that initially poses an issue. I chose not to remove these points as I wanted to see if these points could be classified. Some of the Sinkers were classified as Fourseam Fastballs which makes sense since they are close to Fourseams, and q Split Fingers is correctly classified. 
 
 ## Conclusion
 
-Ultimately we can use speed, spin, and acceleration of the ball to correctly predict what type of pitch was thrown when given this data.
+The application of the k-Nearest Neighbors (kNN) algorithm to the pitch data has yielded promising results. The algorithm was able to accurately classify the type of pitch thrown based on the speed, spin rate, and acceleration of the pitch.
 
-# 4. Citations
+Obtaining the optimal value of k through a simulation running from k=2 to k=40 assisted in achieving the best accuracy possible. Thus, the accuracy of the kNN algorithm which was calculated as the proportion of predicted classes that matched the true test classes, retained a very high accuracy. This helped in aiding the amount of pitches that were correctly classified.
+
+This application can be used to help verify pitches that are labeled after a game by comparing them to the pitcher’s previously tracked pitches. This will help to double-check labeling pitches as there can be errors due to human or computer error. The findings of this project highlight the importance of machine learning algorithms in sports analytics, as they can help teams and players understand and improve their performance.
+
+## Citations
 
 "Statcast Search." Baseball Savant. Retrieved from [link](https://baseballsavant.mlb.com/statcast_search?hfPT=&hfAB=&hfGT=R%7C&hfPR=&hfZ=&hfStadium=&hfBBL=&hfNewZones=&hfPull=&hfC=&hfSea=2023%7C2022%7C2021%7C&hfSit=&player_type=pitcher&hfOuts=&hfOpponent=&pitcher_throws=&batter_stands=&hfSA=&game_date_gt=&game_date_lt=&hfMo=&hfTeam=&home_road=&hfRO=&position=&hfInfield=&hfOutfield=&hfInn=&hfBBT=&hfFlag=&metric_1=api_p_release_spin_rate&metric_1_gt=0&metric_1_lt=&group_by=name&min_pitches=2000&min_results=0&min_pas=0&sort_col=pitches&player_event_sort=api_p_release_speed&sort_order=desc&chk_stats_pa=on&chk_stats_abs=on&chk_stats_bip=on&chk_stats_hits=on&chk_stats_singles=on&chk_stats_dbls=on&chk_stats_triples=on&chk_stats_hrs=on&chk_stats_so=on&chk_stats_k_percent=on&chk_stats_bb=on&chk_stats_bb_percent=on&chk_stats_api_break_z_with_gravity=on&chk_stats_api_break_x_arm=on&chk_stats_api_break_z_induced=on&chk_stats_api_break_x_batter_in=on&chk_stats_pitcher_run_exp=on&chk_stats_velocity=on&chk_stats_effective_speed=on&chk_stats_spin_rate=on&chk_stats_release_pos_z=on&chk_stats_release_pos_x=on&chk_stats_release_extension=on&chk_stats_plate_x=on&chk_stats_plate_z=on&chk_stats_launch_speed=on&chk_stats_hyper_speed=on&chk_stats_launch_angle=on&chk_stats_bbdist=on#results.)
 
-# 5. Appendix: Data Details
+## Appendix: Data Details
 
 For detailed explanations of the data fields in the CSV file, please visit the MLB Statcast website:
 
 <https://baseballsavant.mlb.com/csv-docs>.
 
-This resource provides thorough documentation of eeach of the dataset's variables.
+This resource provides thorough documentation of each of the data set's variables.
